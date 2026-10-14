@@ -49,7 +49,7 @@ variable "aks_node_count" {
 
 variable "aks_vm_size" {
   type    = string
-  default = "Standard_D2s_v4"
+  default = "Standard_D2s_v7"
 }
 
 variable "acr_name" {
@@ -81,4 +81,9 @@ variable "postgres_storage_mb" {
 variable "postgres_db_name" {
   type    = string
   default = "appdb"
+}
+
+variable "postgres_server_name" {
+  type    = string
+  default = null
 }

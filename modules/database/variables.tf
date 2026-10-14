@@ -47,3 +47,9 @@ variable "postgres_db_name" {
   description = "PostgreSQL database name"
   type        = string
 }
+
+variable "postgres_server_name" {
+  description = "Explicit PostgreSQL server name. If null, a resource_name_prefix-based name is used."
+  type        = string
+  default     = null
+}

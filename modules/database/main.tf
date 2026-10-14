@@ -17,7 +17,7 @@ resource "random_password" "postgres_password" {
 
 # Primary PostgreSQL Flexible Server
 resource "azurerm_postgresql_flexible_server" "primary" {
-  name                   = "${var.resource_name_prefix}-psql"
+  name                   = var.postgres_server_name != null ? var.postgres_server_name : "${var.resource_name_prefix}-psql"
   resource_group_name    = var.resource_group_name
   location               = var.location
   version                = var.postgres_version
@@ -25,34 +25,17 @@ resource "azurerm_postgresql_flexible_server" "primary" {
   private_dns_zone_id    = var.private_dns_zone_id
   administrator_login    = "psqladmin"
   administrator_password = random_password.postgres_password.result
-  zone                   = "1"
   storage_mb             = var.postgres_storage_mb
   storage_tier           = "P30" # Added based on recommended storage tier for storage_mb
   auto_grow_enabled      = true  # Added to allow storage to grow as needed
   sku_name               = var.postgres_sku_name
   tags                   = var.tags
-
-  # # Using ignore_changes for zone to prevent unnecessary updates after failovers
-  # lifecycle {
-  #   ignore_changes = [
-  #     zone,
-  #     high_availability[0].standby_availability_zone
-  #   ]
-  # }
-
-  # high_availability {
-  #   mode                      = "ZoneRedundant"
-  #   standby_availability_zone = "2"
-  # }
-
   maintenance_window {
     day_of_week  = 0
     start_hour   = 0
     start_minute = 0
   }
-
   backup_retention_days = 7
-
   # Disable public network access
   public_network_access_enabled = false
 }

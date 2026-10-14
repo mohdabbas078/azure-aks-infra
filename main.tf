@@ -54,6 +54,7 @@ module "database" {
   postgres_version    = var.postgres_version
   postgres_storage_mb = var.postgres_storage_mb
   postgres_db_name    = var.postgres_db_name
+  postgres_server_name = var.postgres_server_name
 }
 
 # AKS Module

@@ -1,20 +1,20 @@
 # Azure AKS Infrastructure
 
-This project provisions a secure Azure Kubernetes Service (AKS) environment with networking, private PostgreSQL, Azure Container Registry (ACR), and Key Vault using Terraform.
+This project provisions a secure Azure Kubernetes Service (AKS) environment with networking, private PostgreSQL, Azure Container Registry (ACR), Key Vault, and private DNS using Terraform.
 
-## Architecture
+It is designed for a private, VNet-integrated three-tier application setup where the AKS cluster, database, and supporting services communicate over Azure private networking rather than public endpoints.
 
-The infrastructure includes:
+## Architecture overview
+
+The platform includes:
 
 - Azure Resource Group
-- Virtual Network and subnets
-- AKS cluster
-- Azure Container Registry
+- Virtual Network with dedicated subnets for AKS and database workloads
+- AKS cluster with managed identity and kubelet identity
+- Azure Container Registry for application image storage
 - PostgreSQL Flexible Server in a private subnet
-- Private DNS zone for PostgreSQL
-- Key Vault for secrets and identity-related configuration
-
-### Architecture diagram
+- Private DNS zone for PostgreSQL name resolution
+- Azure Key Vault for secrets and configuration
 
 ```mermaid
 flowchart LR
@@ -23,7 +23,7 @@ flowchart LR
     RG --> VNET[Virtual Network]
     VNET --> AKSSubnet[AKS Subnet]
     VNET --> DBSubnet[Database Subnet]
-    VNET --> AppGWSubnet[App Gateway Subnet]
+    VNET --> AppGWSubnet[Application Gateway Subnet]
 
     AKSSubnet --> AKS[AKS Cluster]
     AKS --> ACR[Azure Container Registry]
@@ -38,49 +38,35 @@ flowchart LR
     K8sPods --> PG
 ```
 
-### Terraform resource relationship graph
+## Current Terraform configuration
 
-```mermaid
-flowchart TD
-    A[azurerm_resource_group.main] --> B[module.networking]
-    A --> C[module.dns]
-    A --> D[module.database]
-    A --> E[module.aks]
-    A --> F[module.keyvault]
-    A --> G[module.acr]
+This repository is configured to deploy the following environment based on the values in `terraform.tfvars`:
 
-    B --> B1[azurerm_virtual_network.main]
-    B --> B2[azurerm_subnet.aks]
-    B --> B3[azurerm_subnet.database]
-    B --> B4[azurerm_subnet.appgw]
-    B --> B5[azurerm_network_security_group.aks-subnet-nsg]
-    B --> B6[azurerm_network_security_group.database]
+```hcl
+subscription_id = "cec54560-6b89-4061-8be3-036610dd4326"
+resource_group_name = "learning-vijay-rg"
+location = "westus"
+environment = "dev"
 
-    C --> C1[azurerm_private_dns_zone.postgres]
-    C --> C2[azurerm_private_dns_zone_virtual_network_link.postgres]
+vnet_name = "learning-vijay-vnet"
+vnet_address_space = "10.0.0.0/16"
+aks_subnet_prefix = "10.0.1.0/24"
+database_subnet_prefix = "10.0.2.0/24"
+appgw_subnet_prefix = "10.0.4.0/24"
 
-    D --> D1[azurerm_postgresql_flexible_server.primary]
-    D --> D2[azurerm_postgresql_flexible_server_database.db]
-    D --> D3[azurerm_postgresql_flexible_server_configuration.*]
-    D --> D4[random_password.postgres_password]
+aks_cluster_name = "learning-vijay-aks"
+aks_dns_prefix = "learning-vijay-aks"
+aks_node_count = 2
+aks_vm_size = "Standard_D2s_v7"
 
-    E --> E1[azurerm_user_assigned_identity.aks]
-    E --> E2[azurerm_user_assigned_identity.kubelet]
-    E --> E3[azurerm_role_assignment.network_contributor]
-    E --> E4[azurerm_role_assignment.managed_identity_operator]
-    E --> E5[azurerm_kubernetes_cluster.aks]
+acr_name = "learningvijayacr"
+key_vault_name = "kvlearningvijaydev"
 
-    F --> F1[random_string.kv_suffix]
-    F --> F2[azurerm_key_vault.kv]
-
-    G --> G1[random_string.acr_suffix]
-    G --> G2[azurerm_container_registry.acr]
-    G --> G3[azurerm_role_assignment.aks_acr_pull]
-
-    E5 --> ACR
-    E5 --> PG
-    E5 --> KV
-    PG --> DNS
+postgres_sku_name = "B_Standard_B2s"
+postgres_version = "16"
+postgres_storage_mb = 32768
+postgres_db_name = "appdb"
+postgres_server_name = "learning-vijay-dev-psql"
 ```
 
 ## Project structure
@@ -100,144 +86,222 @@ flowchart TD
 │   ├── networking/
 │   └── compute/
 ├── usefull-commands.sh
-└── README.md
+├── README.md
+└── terraform.tfstate
 ```
 
 ## Prerequisites
 
-Before deploying, make sure you have:
+Before you start, ensure you have:
 
 - Azure CLI installed and authenticated
-- Terraform installed
-- Access to an Azure subscription with permission to create the required resources
+- Terraform installed locally
+- Access to an Azure subscription with permission to create resource groups, networking, AKS, PostgreSQL, ACR, and Key Vault resources
+- A supported Azure region for the selected VM SKU and services
 
-Login to Azure:
+### Sign in to Azure
 
 ```bash
 az login
 az account set --subscription "<subscription-id-or-name>"
 ```
 
-## Configuration
+You can confirm the active subscription with:
 
-Update the values in `terraform.tfvars` before running Terraform.
-
-Example:
-
-```hcl
-subscription_id = "<subscription-id>"
-resource_group_name = "azure-vijay-rg"
-location            = "westus"
-environment         = "dev"
-
-vnet_name              = "azure-vijay-vnet"
-vnet_address_space     = "10.0.0.0/16"
-aks_subnet_prefix      = "10.0.1.0/24"
-database_subnet_prefix = "10.0.2.0/24"
-appgw_subnet_prefix    = "10.0.4.0/24"
-
-aks_cluster_name = "azure-vijay-aks"
-aks_dns_prefix   = "azure-vijay-aks"
-aks_node_count   = 2
-aks_vm_size      = "Standard_D2s_v4"
-
-acr_name = "azurevijayacr"
-
-postgres_sku_name   = "B_Standard_B2s"
-postgres_version    = "16"
-postgres_storage_mb = 32768
-postgres_db_name    = "appdb"
+```bash
+az account show -o table
 ```
 
-## Terraform workflow
+## Getting started
 
-Initialize the working directory:
+### 1. Clone the repository and enter the folder
+
+```bash
+git clone <your-repository-url>
+cd azure-aks-infra
+```
+
+### 2. Review the configuration values
+
+Open `terraform.tfvars` and update the values to match your Azure subscription, naming convention, and region.
+
+If you are using a different environment or custom app name, update:
+
+- `resource_group_name`
+- `location`
+- `aks_cluster_name`
+- `acr_name`
+- `key_vault_name`
+- `postgres_server_name`
+- `postgres_db_name`
+
+### 3. Initialize Terraform
 
 ```bash
 terraform init
 ```
 
-Validate the configuration:
+### 4. Validate the configuration
 
 ```bash
 terraform validate
 ```
 
-Review the deployment plan:
+### 5. Review the planned deployment
 
 ```bash
 terraform plan
 ```
 
-Apply the infrastructure:
+This step shows every Azure resource that will be created before you apply changes.
+
+### 6. Provision the infrastructure
 
 ```bash
-terraform apply
+terraform apply --auto-approve
 ```
 
-Destroy resources when no longer needed:
+This will create the following resources:
+
+- Resource group
+- Virtual network and subnets
+- Private DNS zone for PostgreSQL
+- PostgreSQL Flexible Server
+- AKS cluster
+- ACR registry
+- Key Vault
+- Role assignments and managed identities
+
+### 7. Get cluster access
+
+After deployment completes, fetch the cluster credentials:
 
 ```bash
-terraform destroy
+az aks get-credentials \
+  --resource-group <resource-group-name> \
+  --name <aks-cluster-name> \
+  --overwrite-existing
 ```
 
-## Azure resource notes
-
-### AKS
-
-The AKS cluster uses a user-assigned managed identity and kubelet identity.
-
-### Database
-
-The PostgreSQL Flexible Server is created with:
-
-- private access enabled
-- VNet integration via the delegated database subnet
-- private DNS integration
-- generated administrator password
-
-### Registry
-
-The ACR module configures the Azure Container Registry and grants the AKS kubelet identity access for pulling images.
-
-## Accessing the database from AKS
-
-Because the PostgreSQL server is private, applications running inside the AKS cluster can connect using the private FQDN and credentials created by Terraform.
-
-Typical connection pattern:
-
-```bash
-psql "host=<db-fqdn> user=psqladmin password=<password> dbname=appdb sslmode=require"
-```
-
-## Useful commands
-
-Authenticate with Azure:
-
-```bash
-az login
-az account set --subscription "<subscription-id>"
-```
-
-Get AKS credentials:
-
-```bash
-az aks get-credentials --resource-group <resource-group> --name <aks-cluster-name> --overwrite-existing
-```
-
-Check cluster nodes and workloads:
+Then test access:
 
 ```bash
 kubectl get nodes
 kubectl get pods -A
 ```
 
+### 8. Deploy application workloads
+
+Once the cluster is up, you can push a container image to ACR and deploy workloads using Kubernetes manifests or Helm.
+
+Example image push pattern:
+
+```bash
+az acr login --name <acr-name>
+```
+
+Then build and push your application image to ACR and deploy it to AKS.
+
+## Terraform workflow summary
+
+```bash
+terraform init
+terraform validate
+terraform plan
+terraform apply --auto-approve
+```
+
+To remove all created resources:
+
+```bash
+terraform destroy --auto-approve
+```
+
+## Azure resource details
+
+### AKS module
+
+The AKS cluster is provisioned with:
+
+- managed identity for cluster operations
+- kubelet identity for pulling ACR images
+- network configuration using the AKS subnet
+- a node pool sized to `Standard_D2s_v7` in the current configuration
+
+### Database module
+
+The PostgreSQL Flexible Server is created as a private service using:
+
+- `public_network_access_enabled = false`
+- delegated database subnet integration
+- private DNS zone linkage for internal name resolution
+- generated administrator password
+- a dedicated server name variable: `postgres_server_name`
+
+The server name currently resolves to:
+
+```hcl
+learning-vijay-dev-psql
+```
+
+### Key Vault and ACR
+
+The project sets up:
+
+- Azure Container Registry for image storage
+- Key Vault for secure secret and identity-related configuration
+- AKS identity access for pulling images and using assigned permissions
+
+## Accessing PostgreSQL from AKS
+
+Because PostgreSQL is private, applications inside the AKS cluster connect using the private hostname and network integration rather than a public endpoint.
+
+Typical connection pattern:
+
+```bash
+psql "host=<private-db-fqdn> user=psqladmin password=<password> dbname=appdb sslmode=require"
+```
+
+In Kubernetes, the application should use the private database service endpoint or FQDN created by the PostgreSQL Flexible Server and the private DNS zone integration.
+
+## Important operational notes
+
+- Use a region that supports the selected VM SKU and service availability for your Azure subscription.
+- Some Azure subscriptions may not allow all regions or all VM sizes, so confirm availability before applying.
+- Licensing, quota restrictions, and subscription limits can affect whether the deployment succeeds.
+- A private PostgreSQL configuration requires correct subnet delegation and private DNS configuration for name resolution to work reliably from AKS.
+- Since the database is private, avoid public access unless you explicitly need it for troubleshooting or external access.
+
+## Useful commands
+
+Authenticate and select the right subscription:
+
+```bash
+az login
+az account set --subscription "<subscription-id>"
+```
+
+Check Azure regions and availability:
+
+```bash
+az account list-locations -o table
+az vm list-skus --location westus --resource-type virtualMachines -o table
+```
+
+Check cluster health:
+
+```bash
+kubectl get nodes
+kubectl get pods -A
+kubectl get svc -A
+```
+
 ## Notes
 
-- Some Azure regions may impose quota or service restrictions, so choose a supported region from your subscription.
-- For production workloads, store PostgreSQL and other sensitive secrets in Key Vault or Kubernetes Secrets rather than hardcoding them.
-- The current setup is intended for a private, VNet-integrated environment rather than public database access.
+- This project is designed for a secure Azure environment with private endpoints and internal-only access patterns.
+- The values in `terraform.tfvars` are the current deployment defaults for this repository.
+- For production use, consider externalizing credentials and secrets via secure secret management and CI/CD pipelines.
 
 ## License
 
-This project is for infrastructure demonstration and learning purposes.
+This project is intended for infrastructure learning, experimentation, and Azure deployment practice.

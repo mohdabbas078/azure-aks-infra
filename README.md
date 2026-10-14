@@ -15,6 +15,7 @@ The platform includes:
 - PostgreSQL Flexible Server in a private subnet
 - Private DNS zone for PostgreSQL name resolution
 - Azure Key Vault for secrets and configuration
+- A reserved application gateway subnet kept ready for future domain and ingress integration (not currently provisioned as an app gateway resource)
 
 ```mermaid
 flowchart LR
@@ -23,7 +24,7 @@ flowchart LR
     RG --> VNET[Virtual Network]
     VNET --> AKSSubnet[AKS Subnet]
     VNET --> DBSubnet[Database Subnet]
-    VNET --> AppGWSubnet[Application Gateway Subnet]
+    VNET --> AppGWSubnet[Reserved App Gateway Subnet for future ingress/domain setup]
 
     AKSSubnet --> AKS[AKS Cluster]
     AKS --> ACR[Azure Container Registry]
@@ -174,6 +175,7 @@ This will create the following resources:
 
 - Resource group
 - Virtual network and subnets
+- Reserved application gateway subnet for future ingress/domain integration
 - Private DNS zone for PostgreSQL
 - PostgreSQL Flexible Server
 - AKS cluster
@@ -260,6 +262,7 @@ The project sets up:
 - Azure Container Registry for image storage
 - Key Vault for secure secret and identity-related configuration
 - AKS identity access for pulling images and using assigned permissions
+- An application gateway subnet reserved for future domain and ingress integration, such as NGINX Ingress or Azure Application Gateway
 
 ## Accessing PostgreSQL from AKS
 
@@ -309,6 +312,7 @@ kubectl get svc -A
 
 - This project is designed for a secure Azure environment with private endpoints and internal-only access patterns.
 - The values in `terraform.tfvars` are the current deployment defaults for this repository.
+- The application gateway subnet is intentionally kept as a future-ready network space for domain and ingress integration; it is not currently used by an Application Gateway resource.
 - For production use, consider externalizing credentials and secrets via secure secret management and CI/CD pipelines.
 
 ## License

@@ -57,6 +57,11 @@ variable "acr_name" {
   default = "azurevijayacr"
 }
 
+variable "key_vault_name" {
+  type    = string
+  default = null
+}
+
 # Database Variables
 variable "postgres_sku_name" {
   type    = string

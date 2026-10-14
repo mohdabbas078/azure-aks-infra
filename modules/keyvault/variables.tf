@@ -33,3 +33,9 @@ variable "backend_identity_principal_id" {
   type        = string
   default     = null
 }
+
+variable "key_vault_name" {
+  description = "Optional explicit name for the Key Vault. If null, a random suffix name is generated."
+  type        = string
+  default     = null
+}

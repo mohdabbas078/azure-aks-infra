@@ -81,6 +81,7 @@ module "keyvault" {
   resource_group_name          = azurerm_resource_group.main.name
   location                     = var.location
   resource_name_prefix         = "${var.resource_group_name}-${var.environment}"
+  key_vault_name               = var.key_vault_name
   tenant_id                    = data.azurerm_client_config.current.tenant_id
   object_id                    = data.azurerm_client_config.current.object_id
   backend_identity_principal_id = module.aks.identity_principal_id

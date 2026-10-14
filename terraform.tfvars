@@ -21,6 +21,9 @@ aks_vm_size      = "Standard_D2s_v4"
 # ACR Variables
 acr_name = "azurevijayacr"
 
+# Key Vault Variables
+key_vault_name = "kvazurevijaydev"
+
 # Database Variables
 postgres_sku_name   = "B_Standard_B2s"
 postgres_version    = "16"

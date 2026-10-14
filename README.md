@@ -14,6 +14,75 @@ The infrastructure includes:
 - Private DNS zone for PostgreSQL
 - Key Vault for secrets and identity-related configuration
 
+### Architecture diagram
+
+```mermaid
+flowchart LR
+    User[Developer / Operator] --> Azure[Azure Subscription]
+    Azure --> RG[Resource Group]
+    RG --> VNET[Virtual Network]
+    VNET --> AKSSubnet[AKS Subnet]
+    VNET --> DBSubnet[Database Subnet]
+    VNET --> AppGWSubnet[App Gateway Subnet]
+
+    AKSSubnet --> AKS[AKS Cluster]
+    AKS --> ACR[Azure Container Registry]
+    AKS --> K8sPods[Application Pods]
+
+    DBSubnet --> PG[PostgreSQL Flexible Server]
+    PG --> DNS[Private DNS Zone]
+    DNS --> AKS
+
+    RG --> KV[Key Vault]
+    AKS --> KV
+    K8sPods --> PG
+```
+
+### Terraform resource relationship graph
+
+```mermaid
+flowchart TD
+    A[azurerm_resource_group.main] --> B[module.networking]
+    A --> C[module.dns]
+    A --> D[module.database]
+    A --> E[module.aks]
+    A --> F[module.keyvault]
+    A --> G[module.acr]
+
+    B --> B1[azurerm_virtual_network.main]
+    B --> B2[azurerm_subnet.aks]
+    B --> B3[azurerm_subnet.database]
+    B --> B4[azurerm_subnet.appgw]
+    B --> B5[azurerm_network_security_group.aks-subnet-nsg]
+    B --> B6[azurerm_network_security_group.database]
+
+    C --> C1[azurerm_private_dns_zone.postgres]
+    C --> C2[azurerm_private_dns_zone_virtual_network_link.postgres]
+
+    D --> D1[azurerm_postgresql_flexible_server.primary]
+    D --> D2[azurerm_postgresql_flexible_server_database.db]
+    D --> D3[azurerm_postgresql_flexible_server_configuration.*]
+    D --> D4[random_password.postgres_password]
+
+    E --> E1[azurerm_user_assigned_identity.aks]
+    E --> E2[azurerm_user_assigned_identity.kubelet]
+    E --> E3[azurerm_role_assignment.network_contributor]
+    E --> E4[azurerm_role_assignment.managed_identity_operator]
+    E --> E5[azurerm_kubernetes_cluster.aks]
+
+    F --> F1[random_string.kv_suffix]
+    F --> F2[azurerm_key_vault.kv]
+
+    G --> G1[random_string.acr_suffix]
+    G --> G2[azurerm_container_registry.acr]
+    G --> G3[azurerm_role_assignment.aks_acr_pull]
+
+    E5 --> ACR
+    E5 --> PG
+    E5 --> KV
+    PG --> DNS
+```
+
 ## Project structure
 
 ```text

@@ -13,7 +13,7 @@ resource "random_string" "kv_suffix" {
 
 # Azure Key Vault
 resource "azurerm_key_vault" "kv" {
-  name                        = "kv${random_string.kv_suffix.result}"
+  name                        = var.key_vault_name != null ? var.key_vault_name : "kv${random_string.kv_suffix.result}"
   location                    = var.location
   resource_group_name         = var.resource_group_name
   enabled_for_disk_encryption = true

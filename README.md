@@ -114,7 +114,14 @@ az account show -o table
 
 ## Getting started
 
-### 1. Sign in to Azure from your local machine
+### 1. Clone the repository and enter the folder
+
+```bash
+git clone <your-repository-url>
+cd azure-aks-infra
+```
+
+### 2. Sign in to Azure from your local machine
 
 ```bash
 az login
@@ -122,13 +129,6 @@ az account set --subscription "<subscription-id-or-name>"
 ```
 
 This is required before running Terraform from your local machine so Azure CLI can authenticate and authorize resource creation.
-
-### 2. Clone the repository and enter the folder
-
-```bash
-git clone <your-repository-url>
-cd azure-aks-infra
-```
 
 ### 3. Review the configuration values
 

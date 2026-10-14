@@ -114,14 +114,23 @@ az account show -o table
 
 ## Getting started
 
-### 1. Clone the repository and enter the folder
+### 1. Sign in to Azure from your local machine
+
+```bash
+az login
+az account set --subscription "<subscription-id-or-name>"
+```
+
+This is required before running Terraform from your local machine so Azure CLI can authenticate and authorize resource creation.
+
+### 2. Clone the repository and enter the folder
 
 ```bash
 git clone <your-repository-url>
 cd azure-aks-infra
 ```
 
-### 2. Review the configuration values
+### 3. Review the configuration values
 
 Open `terraform.tfvars` and update the values to match your Azure subscription, naming convention, and region.
 
@@ -135,19 +144,19 @@ If you are using a different environment or custom app name, update:
 - `postgres_server_name`
 - `postgres_db_name`
 
-### 3. Initialize Terraform
+### 4. Initialize Terraform
 
 ```bash
 terraform init
 ```
 
-### 4. Validate the configuration
+### 5. Validate the configuration
 
 ```bash
 terraform validate
 ```
 
-### 5. Review the planned deployment
+### 6. Review the planned deployment
 
 ```bash
 terraform plan
@@ -155,7 +164,7 @@ terraform plan
 
 This step shows every Azure resource that will be created before you apply changes.
 
-### 6. Provision the infrastructure
+### 7. Provision the infrastructure
 
 ```bash
 terraform apply --auto-approve
@@ -172,7 +181,7 @@ This will create the following resources:
 - Key Vault
 - Role assignments and managed identities
 
-### 7. Get cluster access
+### 8. Get cluster access
 
 After deployment completes, fetch the cluster credentials:
 
@@ -190,7 +199,7 @@ kubectl get nodes
 kubectl get pods -A
 ```
 
-### 8. Deploy application workloads
+### 9. Deploy application workloads
 
 Once the cluster is up, you can push a container image to ACR and deploy workloads using Kubernetes manifests or Helm.
 

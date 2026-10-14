@@ -78,6 +78,8 @@ postgres_server_name = "learning-vijay-dev-psql"
 ├── providers.tf
 ├── variables.tf
 ├── terraform.tfvars
+├── README.md
+├── usefull-commands.sh
 ├── modules/
 │   ├── aks/
 │   ├── acr/
@@ -86,9 +88,8 @@ postgres_server_name = "learning-vijay-dev-psql"
 │   ├── keyvault/
 │   ├── networking/
 │   └── compute/
-├── usefull-commands.sh
-├── README.md
-└── terraform.tfstate
+├── .gitignore
+└── .terraform/   # generated locally by Terraform, ignored by git
 ```
 
 ## Prerequisites

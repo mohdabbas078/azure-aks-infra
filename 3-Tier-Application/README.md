@@ -1,8 +1,47 @@
 # Three-Tier Goal Tracker
 
-A small goal-tracking application with a Node.js frontend, Go API, and PostgreSQL database. It can run locally with Docker Compose or on AKS using the Kubernetes manifests in this folder.
+A small goal-tracking application with a Node.js frontend, Go API, and PostgreSQL database, deployed to AKS using the Kubernetes manifests in this folder.
 
 ## Architecture
+
+```mermaid
+flowchart LR
+  client([Client]) -->|HTTP :80| frontendSvc
+
+  subgraph aks[AKS Cluster]
+    subgraph frontendNs[Namespace: frontend]
+      frontendSvc[Service: frontend<br/>LoadBalancer :80]
+      frontendPod[Frontend Pod<br/>Node.js :3000]
+      frontendSvc --> frontendPod
+    end
+
+    subgraph backendNs[Namespace: backend]
+      backendSvc[Service: backend<br/>ClusterIP :8080]
+      backendPod[Backend Pod<br/>Go API :8080]
+      backendSvc --> backendPod
+    end
+
+    subgraph databaseNs[Namespace: database]
+      databaseSvc[Service: postgres<br/>ClusterIP :5432]
+      databasePod[PostgreSQL Pod<br/>:5432]
+      databaseSvc --> databasePod
+    end
+
+    csi[Secrets Store CSI provider]
+    backendSpc[SecretProviderClass<br/>namespace: backend]
+    databaseSpc[SecretProviderClass<br/>namespace: database]
+    backendSecret[Kubernetes Secret: db-secret<br/>key: DB_PASSWORD]
+    databaseSecret[Kubernetes Secret: db-secret<br/>key: DB_PASSWORD]
+
+    frontendPod -->|API requests :8080| backendSvc
+    backendPod -->|PostgreSQL :5432| databaseSvc
+    csi --> backendSpc --> backendSecret --> backendPod
+    csi --> databaseSpc --> databaseSecret --> databasePod
+  end
+
+  keyVault[Azure Key Vault<br/>secret: DB-PASSWORD] --> csi
+```
+
 ## Deploy to AKS After Infrastructure Provisioning
 
 This workflow assumes Terraform has already provisioned AKS, ACR, and Key Vault, and the database password has already been pushed to Key Vault as `DB-PASSWORD` in `kvlearningvijaydev`.
@@ -80,52 +119,12 @@ kubectl get services -n frontend
 
 When the frontend Service has an external IP, open `http://<external-ip>`.
 
-## Local Development
-
-With Docker and the Compose plugin installed, start the local stack from this folder:
-
-```sh
-cd Docker/docker-local-deployment
-From the Kubernetes manifests folder, apply the deployment:
-```
-
-Open `http://localhost:3000`. The local Compose file uses a development PostgreSQL password and a named volume; do not use its local credentials in a deployed environment.
-
-Stop the services with `docker compose down`. To also delete the local database volume and its data, use `docker compose down -v`.
-
 ## Configuration, Secrets, and Data
 
 - Frontend settings are in `k8s/frontend/configmap.yaml` (`PORT`, `BACKEND_URL`).
 - Backend settings are in `k8s/backend/configmap.yaml` (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `SSL`, `PORT`).
 - PostgreSQL settings are in `k8s/database/configmap.yaml` (`POSTGRES_USER`, `POSTGRES_DB`).
 - The Key Vault secret `DB-PASSWORD` is synced to `db-secret`, key `DB_PASSWORD`, separately in the backend and database namespaces. Each pod mounts its namespace's SecretProviderClass to trigger the CSI sync.
-- ConfigMap environment changes require restarting the affected Deployment to take effect.
-- PostgreSQL is currently a single-replica Deployment without a persistent volume. Pod replacement can lose database data; use a persistent volume and an appropriate database recovery/backup plan for durable workloads.
-
-```sh
-cd 3-Tier-Application/k8s
-./deploy.sh
-```
-
-The script applies namespaces, then database, backend, and frontend resources. The frontend Service is a public-facing `LoadBalancer` on port 80. Backend and PostgreSQL Services are internal `ClusterIP` Services on ports 8080 and 5432.
-
-Check rollout and service status:
-
-```sh
-kubectl get pods,services -n database
-kubectl get pods,services -n backend
-kubectl get pods,services -n frontend
-kubectl get service frontend -n frontend
-```
-
-When the frontend Service has an external IP, open `http://<external-ip>`.
-
-## Configuration and Secrets
-
-- Frontend settings are in `k8s/frontend/configmap.yaml` (`PORT`, `BACKEND_URL`).
-- Backend settings are in `k8s/backend/configmap.yaml` (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `SSL`, `PORT`).
-- PostgreSQL settings are in `k8s/database/configmap.yaml` (`POSTGRES_USER`, `POSTGRES_DB`).
-- The database password is not in a ConfigMap. Backend and PostgreSQL read it from `db-secret` using `secretKeyRef`.
 - ConfigMap environment changes require restarting the affected Deployment to take effect.
 - PostgreSQL is currently a single-replica Deployment without a persistent volume. Pod replacement can lose database data; use a persistent volume and an appropriate database recovery/backup plan for durable workloads.
 

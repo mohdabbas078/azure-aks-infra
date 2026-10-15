@@ -1,19 +1,17 @@
 # Azure AKS Infrastructure
 
-This project provisions a secure Azure Kubernetes Service (AKS) environment with networking, private PostgreSQL, Azure Container Registry (ACR), Key Vault, and private DNS using Terraform.
+This project provisions a secure Azure Kubernetes Service (AKS) environment with networking, Azure Container Registry (ACR), and Key Vault using Terraform.
 
-It is designed for a private, VNet-integrated three-tier application setup where the AKS cluster, database, and supporting services communicate over Azure private networking rather than public endpoints.
+It is designed for a private, VNet-integrated setup where the AKS cluster and supporting Azure services are deployed in a secure network boundary. The DNS and database modules are currently not active in this root configuration, so the current environment focuses on AKS, ACR, networking, and Key Vault rather than PostgreSQL deployment.
 
 ## Architecture overview
 
 The platform includes:
 
 - Azure Resource Group
-- Virtual Network with dedicated subnets for AKS and database workloads
+- Virtual Network with dedicated subnets for AKS and future ingress/domain use
 - AKS cluster with managed identity and kubelet identity
 - Azure Container Registry for application image storage
-- PostgreSQL Flexible Server in a private subnet
-- Private DNS zone for PostgreSQL name resolution
 - Azure Key Vault for secrets and configuration
 - A reserved application gateway subnet kept ready for future domain and ingress integration (not currently provisioned as an app gateway resource)
 
@@ -23,20 +21,15 @@ flowchart LR
     Azure --> RG[Resource Group]
     RG --> VNET[Virtual Network]
     VNET --> AKSSubnet[AKS Subnet]
-    VNET --> DBSubnet[Database Subnet]
     VNET --> AppGWSubnet[Reserved App Gateway Subnet for future ingress/domain setup]
 
     AKSSubnet --> AKS[AKS Cluster]
     AKS --> ACR[Azure Container Registry]
     AKS --> K8sPods[Application Pods]
 
-    DBSubnet --> PG[PostgreSQL Flexible Server]
-    PG --> DNS[Private DNS Zone]
-    DNS --> AKS
-
     RG --> KV[Key Vault]
     AKS --> KV
-    K8sPods --> PG
+    AppGWSubnet -. future ingress/domain layer .-> AKS
 ```
 
 ## Current Terraform configuration
@@ -62,12 +55,6 @@ aks_vm_size = "Standard_D2s_v7"
 
 acr_name = "learningvijayacr"
 key_vault_name = "kvlearningvijaydev"
-
-postgres_sku_name = "B_Standard_B2s"
-postgres_version = "16"
-postgres_storage_mb = 32768
-postgres_db_name = "appdb"
-postgres_server_name = "learning-vijay-dev-psql"
 ```
 
 ## Project structure
@@ -83,8 +70,6 @@ postgres_server_name = "learning-vijay-dev-psql"
 ├── modules/
 │   ├── aks/
 │   ├── acr/
-│   ├── database/
-│   ├── dns/
 │   ├── keyvault/
 │   ├── networking/
 │   └── compute/
@@ -98,7 +83,7 @@ Before you start, ensure you have:
 
 - Azure CLI installed and authenticated
 - Terraform installed locally
-- Access to an Azure subscription with permission to create resource groups, networking, AKS, PostgreSQL, ACR, and Key Vault resources
+- Access to an Azure subscription with permission to create resource groups, networking, AKS, ACR, and Key Vault resources
 - A supported Azure region for the selected VM SKU and services
 
 ### Sign in to Azure
@@ -143,8 +128,6 @@ If you are using a different environment or custom app name, update:
 - `aks_cluster_name`
 - `acr_name`
 - `key_vault_name`
-- `postgres_server_name`
-- `postgres_db_name`
 
 ### 4. Initialize Terraform
 
@@ -177,8 +160,6 @@ This will create the following resources:
 - Resource group
 - Virtual network and subnets
 - Reserved application gateway subnet for future ingress/domain integration
-- Private DNS zone for PostgreSQL
-- PostgreSQL Flexible Server
 - AKS cluster
 - ACR registry
 - Key Vault
@@ -240,21 +221,13 @@ The AKS cluster is provisioned with:
 - network configuration using the AKS subnet
 - a node pool sized to `Standard_D2s_v7` in the current configuration
 
-### Database module
+### Networking and future ingress layer
 
-The PostgreSQL Flexible Server is created as a private service using:
+The network is prepared with a dedicated subnet for future ingress/domain integration:
 
-- `public_network_access_enabled = false`
-- delegated database subnet integration
-- private DNS zone linkage for internal name resolution
-- generated administrator password
-- a dedicated server name variable: `postgres_server_name`
-
-The server name currently resolves to:
-
-```hcl
-learning-vijay-dev-psql
-```
+- `appgw_subnet_prefix` is reserved for later use with NGINX Ingress or Azure Application Gateway
+- the subnet is intentionally not tied to a live gateway resource in the current Terraform root configuration
+- this keeps the network ready for future public-facing traffic management without adding unused components today
 
 ### Key Vault and ACR
 
@@ -263,27 +236,15 @@ The project sets up:
 - Azure Container Registry for image storage
 - Key Vault for secure secret and identity-related configuration
 - AKS identity access for pulling images and using assigned permissions
-- An application gateway subnet reserved for future domain and ingress integration, such as NGINX Ingress or Azure Application Gateway
-
-## Accessing PostgreSQL from AKS
-
-Because PostgreSQL is private, applications inside the AKS cluster connect using the private hostname and network integration rather than a public endpoint.
-
-Typical connection pattern:
-
-```bash
-psql "host=<private-db-fqdn> user=psqladmin password=<password> dbname=appdb sslmode=require"
-```
-
-In Kubernetes, the application should use the private database service endpoint or FQDN created by the PostgreSQL Flexible Server and the private DNS zone integration.
+- a future-ready application gateway subnet for domain and ingress integration
 
 ## Important operational notes
 
 - Use a region that supports the selected VM SKU and service availability for your Azure subscription.
 - Some Azure subscriptions may not allow all regions or all VM sizes, so confirm availability before applying.
 - Licensing, quota restrictions, and subscription limits can affect whether the deployment succeeds.
-- A private PostgreSQL configuration requires correct subnet delegation and private DNS configuration for name resolution to work reliably from AKS.
-- Since the database is private, avoid public access unless you explicitly need it for troubleshooting or external access.
+- The app gateway subnet is reserved for future ingress/domain integration and is not currently attached to a live gateway deployment.
+- DNS and database modules are intentionally not active in the current root configuration.
 
 ## Useful commands
 
@@ -311,9 +272,10 @@ kubectl get svc -A
 
 ## Notes
 
-- This project is designed for a secure Azure environment with private endpoints and internal-only access patterns.
+- This project is designed for a secure Azure environment with private networking and future-ready ingress planning.
 - The values in `terraform.tfvars` are the current deployment defaults for this repository.
 - The application gateway subnet is intentionally kept as a future-ready network space for domain and ingress integration; it is not currently used by an Application Gateway resource.
+- The DNS and database modules are currently commented out in the root configuration, so the active deployment does not create PostgreSQL or a private DNS zone at this time.
 - For production use, consider externalizing credentials and secrets via secure secret management and CI/CD pipelines.
 
 ## License

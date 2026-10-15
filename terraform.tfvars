@@ -24,9 +24,9 @@ acr_name = "learningvijayacr"
 # Key Vault Variables
 key_vault_name = "kvlearningvijaydev"
 
-# Database Variables
-postgres_sku_name    = "B_Standard_B2s"
-postgres_version     = "16"
-postgres_storage_mb  = 32768
-postgres_db_name     = "appdb"
-postgres_server_name = "learning-vijay-dev-psql"
+# # Database Variables
+# postgres_sku_name    = "B_Standard_B2s"
+# postgres_version     = "16"
+# postgres_storage_mb  = 32768
+# postgres_db_name     = "appdb"
+# postgres_server_name = "learning-vijay-dev-psql"

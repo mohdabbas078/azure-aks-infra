@@ -23,39 +23,39 @@ module "networking" {
 
 
 
-# DNS Module for PostgreSQL private access
-module "dns" {
-  source = "./modules/dns"
+# # DNS Module for PostgreSQL private access
+# module "dns" {
+#   source = "./modules/dns"
 
-  resource_group_name = azurerm_resource_group.main.name
-  vnet_id             = module.networking.vnet_id
+#   resource_group_name = azurerm_resource_group.main.name
+#   vnet_id             = module.networking.vnet_id
 
-  tags = {
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
+#   tags = {
+#     environment = var.environment
+#     managed_by  = "terraform"
+#   }
+# }
 
-# Database Module
-module "database" {
-  source = "./modules/database"
+# # Database Module
+# module "database" {
+#   source = "./modules/database"
 
-  resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  resource_name_prefix = "${var.resource_group_name}-${var.environment}"
-  tags = {
-    environment = var.environment
-    managed_by  = "terraform"
-  }
+#   resource_group_name = azurerm_resource_group.main.name
+#   location            = var.location
+#   resource_name_prefix = "${var.resource_group_name}-${var.environment}"
+#   tags = {
+#     environment = var.environment
+#     managed_by  = "terraform"
+#   }
 
-  database_subnet_ids = [module.networking.database_subnet_id]
-  private_dns_zone_id = module.dns.private_dns_zone_id
-  postgres_sku_name   = var.postgres_sku_name
-  postgres_version    = var.postgres_version
-  postgres_storage_mb = var.postgres_storage_mb
-  postgres_db_name    = var.postgres_db_name
-  postgres_server_name = var.postgres_server_name
-}
+#   database_subnet_ids = [module.networking.database_subnet_id]
+#   private_dns_zone_id = module.dns.private_dns_zone_id
+#   postgres_sku_name   = var.postgres_sku_name
+#   postgres_version    = var.postgres_version
+#   postgres_storage_mb = var.postgres_storage_mb
+#   postgres_db_name    = var.postgres_db_name
+#   postgres_server_name = var.postgres_server_name
+# }
 
 # AKS Module
 module "aks" {

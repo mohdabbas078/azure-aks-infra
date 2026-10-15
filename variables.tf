@@ -62,28 +62,28 @@ variable "key_vault_name" {
   default = null
 }
 
-# Database Variables
-variable "postgres_sku_name" {
-  type    = string
-  default = "B_Standard_B2s"
-}
+# # Database Variables
+# variable "postgres_sku_name" {
+#   type    = string
+#   default = "B_Standard_B2s"
+# }
 
-variable "postgres_version" {
-  type    = string
-  default = "16"
-}
+# variable "postgres_version" {
+#   type    = string
+#   default = "16"
+# }
 
-variable "postgres_storage_mb" {
-  type    = number
-  default = 32768
-}
+# variable "postgres_storage_mb" {
+#   type    = number
+#   default = 32768
+# }
 
-variable "postgres_db_name" {
-  type    = string
-  default = "appdb"
-}
+# variable "postgres_db_name" {
+#   type    = string
+#   default = "appdb"
+# }
 
-variable "postgres_server_name" {
-  type    = string
-  default = null
-}
+# variable "postgres_server_name" {
+#   type    = string
+#   default = null
+# }

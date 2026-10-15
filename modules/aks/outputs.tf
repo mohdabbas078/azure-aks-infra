@@ -33,3 +33,8 @@ output "kubelet_identity_principal_id" {
   description = "Principal ID of the AKS kubelet user-assigned identity"
   value       = azurerm_user_assigned_identity.kubelet.principal_id
 }
+
+output "kubelet_identity_client_id" {
+  description = "Client ID of the AKS kubelet user-assigned identity"
+  value       = azurerm_user_assigned_identity.kubelet.client_id
+}

@@ -60,6 +60,15 @@ resource "azurerm_key_vault" "kv" {
     ]
   }
 
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = var.key_vault_csi_identity_principal_id
+
+    secret_permissions = [
+      "Get", "List"
+    ]
+  }
+
   # Network access configuration
   network_acls {
     default_action = "Allow"

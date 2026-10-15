@@ -84,3 +84,19 @@ kubectl get nodes
 ### Deploy NGINX to AKS
 kubectl create deployment nginx --image=azurevijayacr.azurecr.io/nginx:latest
 kubectl expose deployment nginx --port=80 --target-port=80 --type=LoadBalancer
+
+### Push Secrets TO KV
+KEY_VAULT_NAME="kvlearningvijaydev"
+SECRET_NAME="DB-PASSWORD"
+
+printf "Enter the database password (input hidden): "
+IFS= read -r -s DB_PASSWORD
+printf '\n'
+
+az keyvault secret set \
+  --vault-name "$KEY_VAULT_NAME" \
+  --name "$SECRET_NAME" \
+  --value "$DB_PASSWORD" \
+  --output none
+
+unset DB_PASSWORD

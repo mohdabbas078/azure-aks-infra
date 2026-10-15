@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -16,10 +16,10 @@ COPY main.go ./
 # RUN go vet -v
 
 # Build the application CGO_ENABLED=0 for removeing c library dependencies
-RUN CGO_ENABLED=0  go build -o backend-app
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o backend-app
 
 # Using a distroless base image to create a minimal runtime image
-FROM gcr.io/distroless/static-debian12
+FROM --platform=linux/amd64 gcr.io/distroless/static-debian12
 
 WORKDIR /app
 

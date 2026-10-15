@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS build
+FROM --platform=linux/amd64 node:18-alpine AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 
 # Production stage using distroless
-FROM gcr.io/distroless/nodejs:18
+FROM --platform=linux/amd64 gcr.io/distroless/nodejs:18
 
 WORKDIR /app
 

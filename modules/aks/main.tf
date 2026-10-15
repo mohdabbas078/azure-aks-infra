@@ -62,6 +62,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     dns_service_ip    = var.dns_service_ip
   }
 
+  key_vault_secrets_provider {
+    secret_rotation_enabled  = true
+    secret_rotation_interval = "2m"
+  }
+
   tags = var.tags
 
   lifecycle {

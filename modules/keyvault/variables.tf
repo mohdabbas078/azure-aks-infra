@@ -34,6 +34,11 @@ variable "backend_identity_principal_id" {
   default     = null
 }
 
+variable "key_vault_csi_identity_principal_id" {
+  description = "Principal ID of the user-assigned identity used by the Key Vault CSI provider"
+  type        = string
+}
+
 variable "key_vault_name" {
   description = "Optional explicit name for the Key Vault. If null, a random suffix name is generated."
   type        = string

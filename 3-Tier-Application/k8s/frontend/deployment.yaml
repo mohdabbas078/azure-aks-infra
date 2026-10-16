@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: learningvijayacr.azurecr.io/goal-tracker-frontend:latest
+          image: observabilityacrwestusnodjs.azurecr.io/observability-frontend:latest
           imagePullPolicy: Always
           ports:
             - name: http

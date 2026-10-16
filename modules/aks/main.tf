@@ -31,7 +31,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   sku_tier            = var.sku_tier
   oidc_issuer_enabled = true
 
-  node_resource_group = var.node_resource_group == null ? "${var.cluster_name}-node-rg" : var.node_resource_group
+  # node_resource_group = var.resource_group_name
 
   identity {
     type         = "UserAssigned"

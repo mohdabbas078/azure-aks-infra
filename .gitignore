@@ -24,10 +24,10 @@ vendor/
 
 # Terraform
 .terraform/
-.terraform.lock.hcl
-.terraform.tfstate.lock.info
-.terraform.tfstate.lock 2.info
-terraform.tfstate
+# .terraform.lock.hcl
+# .terraform.tfstate.lock.info
+# .terraform.tfstate.lock 2.info
+# terraform.tfstate
 terraform.tfstate.backup
 # *.tfvars
 !infra/environments/prod/terraform.tfvars

@@ -1,8 +1,8 @@
-podman build -t goal-tracker-backend:latest .
+podman build -t observability-backend:latest .
 
-podman tag goal-tracker-backend:latest learningvijayacr.azurecr.io/goal-tracker-backend:latest
+podman tag observability-backend:latest observabilityacrwestusnodjs.azurecr.io/observability-backend:latest
 # ACR login
-az acr login --name learningvijayacr.azurecr.io
+az acr login --name observabilityacrwestusnodjs.azurecr.io
 # than
-podman login learningvijayacr.azurecr.io
-podman push --retry=5 --retry-delay=5s learningvijayacr.azurecr.io/goal-tracker-backend:latest
+podman login observabilityacrwestusnodjs.azurecr.io
+podman push --retry=5 --retry-delay=5s observabilityacrwestusnodjs.azurecr.io/observability-backend:latest

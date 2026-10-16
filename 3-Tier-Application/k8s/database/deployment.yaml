@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: learningvijayacr.azurecr.io/postgres:15
+          image: observabilityacrwestusnodjs.azurecr.io/postgres:15
           imagePullPolicy: IfNotPresent
           ports:
             - name: postgres

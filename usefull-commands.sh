@@ -86,12 +86,9 @@ kubectl create deployment nginx --image=azurevijayacr.azurecr.io/nginx:latest
 kubectl expose deployment nginx --port=80 --target-port=80 --type=LoadBalancer
 
 ### Push Secrets TO KV
-KEY_VAULT_NAME="kvlearningvijaydev"
+KEY_VAULT_NAME="keyvaultobservabilitydev"
 SECRET_NAME="DB-PASSWORD"
-
-printf "Enter the database password (input hidden): "
-IFS= read -r -s DB_PASSWORD
-printf '\n'
+DB_PASSWORD="admin@123"
 
 az keyvault secret set \
   --vault-name "$KEY_VAULT_NAME" \
@@ -100,3 +97,7 @@ az keyvault secret set \
   --output none
 
 unset DB_PASSWORD
+
+
+####
+kubectl rollout restart deployment/frontend -n frontend
